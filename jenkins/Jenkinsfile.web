@@ -54,14 +54,15 @@ pipeline {
       steps {
         sh '''
           PROJECTS=""
+          SUITE="${TEST_SUITE:-all}"
           if [ "$ALL_BROWSERS" != "true" ]; then PROJECTS="--project=chromium"; fi
 
           if [ -n "$TEST_ID" ]; then
             npx playwright test $PROJECTS --grep "$TEST_ID"
-          elif [ "$TEST_SUITE" = "all" ]; then
+          elif [ "$SUITE" = "all" ]; then
             npx playwright test $PROJECTS
           else
-            npx playwright test $PROJECTS --grep "@$TEST_SUITE"
+            npx playwright test $PROJECTS --grep "@$SUITE"
           fi
         '''
       }

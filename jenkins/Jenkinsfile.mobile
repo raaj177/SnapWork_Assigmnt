@@ -63,12 +63,13 @@ pipeline {
       steps {
         dir('mobile') {
           sh '''
+            SUITE="${TEST_SUITE:-all}"
             if [ -n "$TEST_ID" ]; then
               npm run test:one -- "$TEST_ID"
-            elif [ "$TEST_SUITE" = "all" ]; then
+            elif [ "$SUITE" = "all" ]; then
               npm test
             else
-              npm run "test:$TEST_SUITE"
+              npm run "test:$SUITE"
             fi
           '''
         }

@@ -29,7 +29,7 @@ test.describe('Sanity', () => {
     await loginPage.open();
   });
 
-  test.afterEach(async (_fixtures, testInfo) => {
+  test.afterEach(async ({}, testInfo) => {
     await attachScreenshotOnFailure(page, testInfo);
   });
 
