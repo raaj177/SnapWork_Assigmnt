@@ -1,0 +1,19 @@
+{
+  "mandatory": [
+    { "id": "TC_WEB_LOGIN_005", "tags": "@smoke @sanity @negative @regression", "title": "both fields empty shows username required", "username": "", "password": "", "error": "usernameRequired" },
+    { "id": "TC_WEB_LOGIN_006", "tags": "@negative @regression", "title": "empty password shows password required", "username": "standard_user", "password": "", "error": "passwordRequired" },
+    { "id": "TC_WEB_LOGIN_007", "tags": "@negative @regression", "title": "empty username shows username required", "username": "", "password": "secret_sauce", "error": "usernameRequired" }
+  ],
+  "invalid": [
+    { "id": "TC_WEB_LOGIN_008", "tags": "@smoke @sanity @negative @regression", "title": "unknown username with valid password is rejected", "username": "invalid_user", "password": "secret_sauce" },
+    { "id": "TC_WEB_LOGIN_009", "tags": "@negative @regression", "title": "valid username with wrong password is rejected", "username": "standard_user", "password": "wrong_password" },
+    { "id": "TC_WEB_LOGIN_010", "tags": "@negative @regression", "title": "unknown username with wrong password is rejected", "username": "invalid_user", "password": "wrong_password" },
+    { "id": "TC_WEB_LOGIN_011", "tags": "@negative @regression", "title": "username is case sensitive", "username": "STANDARD_USER", "password": "secret_sauce" },
+    { "id": "TC_WEB_LOGIN_012", "tags": "@negative @regression", "title": "password is case sensitive", "username": "standard_user", "password": "SECRET_SAUCE" },
+    { "id": "TC_WEB_LOGIN_013", "tags": "@negative @regression", "title": "username padded with spaces is rejected", "username": " standard_user ", "password": "secret_sauce" }
+  ],
+  "payloads": {
+    "sql": "' OR 1=1 --",
+    "xss": "<script>alert(1)</script>"
+  }
+}

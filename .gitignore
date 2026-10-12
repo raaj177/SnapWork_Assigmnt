@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+
+# Test output and reports (web)
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+/allure-results/
+/allure-report/
+
+# Test output and reports (mobile)
+/mobile/allure-results/
+/mobile/allure-report/
+/mobile/reports/
+/mobile/screenshots/
+/mobile/logs/
+
+# Local config and secrets
+.env
+.env.*
+!.env.example
+
+# Machine-specific tooling config (paths and tokens differ per developer)
+.vscode/mcp.json
+.playwright-mcp/
+
+# Application binaries (download locally)
+*.apk
+*.aab
+
+# Logs and caches
+*.log
+npm-debug.log*
+*.tsbuildinfo
+.cache/
+coverage/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+*.swp

@@ -1,0 +1,96 @@
+// Must run on the machine where the Android phone is attached over USB.
+pipeline {
+  agent any
+
+  tools { nodejs 'NodeJS-22' }
+
+  options {
+    timestamps()
+    timeout(time: 45, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '20'))
+    disableConcurrentBuilds()
+  }
+
+  parameters {
+    choice(name: 'TEST_SUITE', choices: ['all', 'smoke', 'regression'], description: 'Tag to run')
+    string(name: 'TEST_ID', defaultValue: '', description: 'Optional single test ID such as TC_MOB_LOGIN_003 (overrides TEST_SUITE)')
+    string(name: 'ANDROID_HOME', defaultValue: '', description: 'Folder that contains platform-tools/adb')
+    string(name: 'ANDROID_UDID', defaultValue: '', description: 'Device serial from `adb devices` (no spaces); leave empty for a single device')
+  }
+
+  environment {
+    CI = 'true'
+    ANDROID_HOME = "${params.ANDROID_HOME}"
+    ANDROID_SDK_ROOT = "${params.ANDROID_HOME}"
+    ANDROID_UDID = "${params.ANDROID_UDID}"
+    LOG_LEVEL = 'info'
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+        sh 'rm -rf mobile/allure-results mobile/allure-report mobile/reports mobile/screenshots'
+      }
+    }
+
+    stage('Install') {
+      steps {
+        dir('mobile') {
+          sh 'npm ci'
+        }
+      }
+    }
+
+    stage('Appium driver') {
+      steps {
+        dir('mobile') {
+          sh 'npx appium driver list --installed 2>&1 | grep -q uiautomator2 || npx appium driver install uiautomator2'
+        }
+      }
+    }
+
+    stage('Device check') {
+      steps {
+        sh '''
+          if [ -z "$ANDROID_HOME" ]; then echo "Set the ANDROID_HOME build parameter"; exit 1; fi
+          "$ANDROID_HOME/platform-tools/adb" devices
+        '''
+      }
+    }
+
+    stage('Mobile tests') {
+      steps {
+        dir('mobile') {
+          sh '''
+            if [ -n "$TEST_ID" ]; then
+              npm run test:one -- "$TEST_ID"
+            elif [ "$TEST_SUITE" = "all" ]; then
+              npm test
+            else
+              npm run "test:$TEST_SUITE"
+            fi
+          '''
+        }
+      }
+    }
+  }
+
+  post {
+    always {
+      junit allowEmptyResults: true, testResults: 'mobile/reports/junit/*.xml'
+      dir('mobile') {
+        sh 'npm run allure:generate || true'
+      }
+      publishHTML(target: [
+        reportName: 'Mobile Allure Report',
+        reportDir: 'mobile/allure-report',
+        reportFiles: 'index.html',
+        keepAll: true,
+        alwaysLinkToLastBuild: true,
+        allowMissing: true
+      ])
+      archiveArtifacts artifacts: 'mobile/screenshots/**, mobile/reports/**', allowEmptyArchive: true
+    }
+  }
+}

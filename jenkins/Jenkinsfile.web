@@ -1,0 +1,94 @@
+pipeline {
+  agent any
+
+  tools { nodejs 'NodeJS-22' }
+
+  options {
+    timestamps()
+    timeout(time: 30, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '20'))
+    disableConcurrentBuilds()
+  }
+
+  parameters {
+    choice(name: 'TEST_SUITE', choices: ['all', 'sanity', 'smoke', 'regression'], description: 'Tag to run')
+    string(name: 'TEST_ID', defaultValue: '', description: 'Optional single test ID such as TC_WEB_LOGIN_001 (overrides TEST_SUITE)')
+    booleanParam(name: 'HEADLESS', defaultValue: true, description: 'Run the browser without a visible window')
+    booleanParam(name: 'ALL_BROWSERS', defaultValue: false, description: 'Also run the @cross-browser tests on Firefox and WebKit')
+  }
+
+  environment {
+    CI = 'true'
+    HEADLESS = "${params.HEADLESS}"
+    BASE_URL = 'https://www.saucedemo.com'
+    LOG_LEVEL = 'info'
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+        sh 'rm -rf allure-results allure-report playwright-report test-results'
+      }
+    }
+
+    stage('Install') {
+      steps {
+        sh 'npm ci'
+      }
+    }
+
+    stage('Browsers') {
+      steps {
+        sh '''
+          if [ "$ALL_BROWSERS" = "true" ]; then
+            npx playwright install chromium firefox webkit
+          else
+            npx playwright install chromium
+          fi
+        '''
+      }
+    }
+
+    stage('Web tests') {
+      steps {
+        sh '''
+          PROJECTS=""
+          if [ "$ALL_BROWSERS" != "true" ]; then PROJECTS="--project=chromium"; fi
+
+          if [ -n "$TEST_ID" ]; then
+            npx playwright test $PROJECTS --grep "$TEST_ID"
+          elif [ "$TEST_SUITE" = "all" ]; then
+            npx playwright test $PROJECTS
+          else
+            npx playwright test $PROJECTS --grep "@$TEST_SUITE"
+          fi
+        '''
+      }
+    }
+  }
+
+  post {
+    always {
+      junit allowEmptyResults: true, testResults: 'test-results/junit.xml'
+      sh 'npm run allure:generate || true'
+      publishHTML(target: [
+        reportName: 'Playwright Report',
+        reportDir: 'playwright-report',
+        reportFiles: 'index.html',
+        keepAll: true,
+        alwaysLinkToLastBuild: true,
+        allowMissing: true
+      ])
+      publishHTML(target: [
+        reportName: 'Web Allure Report',
+        reportDir: 'allure-report',
+        reportFiles: 'index.html',
+        keepAll: true,
+        alwaysLinkToLastBuild: true,
+        allowMissing: true
+      ])
+      archiveArtifacts artifacts: 'test-results/**, playwright-report/**', allowEmptyArchive: true
+    }
+  }
+}
