@@ -13,6 +13,8 @@
     "test:web:one": "playwright test --grep",
     "test:mobile": "npm --prefix mobile test",
     "test:mobile:smoke": "npm --prefix mobile run test:smoke",
+    "report:mobile": "npm --prefix mobile run report",
+    "report:all": "allure generate allure-results mobile/allure-results --clean -o allure-report-all && allure open allure-report-all",
     "test:all": "npm run test:web; web=$?; npm run test:mobile; mobile=$?; [ $web -eq 0 ] && [ $mobile -eq 0 ]",
     "test:all:smoke": "npm run test:web:smoke; web=$?; npm run test:mobile:smoke; mobile=$?; [ $web -eq 0 ] && [ $mobile -eq 0 ]",
     "typecheck": "tsc --noEmit",

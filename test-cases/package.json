@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "generate": "tsx generate-excel.new.ts"
+    "generate": "tsx generate-excel.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

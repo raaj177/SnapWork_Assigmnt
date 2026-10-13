@@ -8,5 +8,5 @@
     "skipLibCheck": true,
     "resolveJsonModule": true
   },
-  "include": ["generate-excel.ts", "generate-excel.new.ts"]
+  "include": ["generate-excel.ts", "generate-excel.ts"]
 }
